@@ -12,7 +12,7 @@ install:
 
 ## Generate BDD test files from .feature files
 bddgen:
-	npx playwright-bdd generate
+	./node_modules/.bin/bddgen
 
 ## Run all BDD tests (headless)
 test: bddgen
@@ -62,7 +62,7 @@ docker-test: docker-build
 		-e BUGGY_CARS_TEST_LOGIN=$(BUGGY_CARS_TEST_LOGIN) \
 		-v $(PWD)/allure-results:/app/allure-results \
 		-v $(PWD)/test-results:/app/test-results \
-		$(DOCKER_IMAGE) sh -c "npx playwright-bdd generate && npx playwright test --project=bdd"
+		$(DOCKER_IMAGE) sh -c "./node_modules/.bin/bddgen && npx playwright test --project=bdd"
 
 ## Run lint in Docker
 docker-lint: docker-build
