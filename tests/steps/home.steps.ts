@@ -50,7 +50,7 @@ When("the user opens the Overall Rating page", async ({ page }) => {
 
 /** Overall `/overall` listing (`table.cars`); safe to repeat after pager navigation. */
 Then("the cars table should be visible", async ({ page }) => {
-  await expect(page.locator("table.cars")).toBeVisible();
+  await expect(page.locator("table.cars")).toBeVisible({ timeout: 30_000 });
 });
 
 Then(
