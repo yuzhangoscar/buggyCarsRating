@@ -1,28 +1,23 @@
+import "dotenv/config";
+
 import { defineConfig, devices } from "@playwright/test";
+import { defineBddConfig } from "playwright-bdd";
 
-// Environment configuration placeholders
-const ENV = process.env.TEST_ENV || "dev";
+// All environments currently point to the same URL.
+// Update these when real environment URLs become available.
+const BUGGY_SITE_BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "https://buggy.justtestit.org/";
 
-const envConfig: Record<string, { baseURL: string }> = {
-  dev: {
-    baseURL: "https://dev.placeholder.example.com",
-  },
-  staging: {
-    baseURL: "https://staging.placeholder.example.com",
-  },
-  qa: {
-    baseURL: "https://qa.placeholder.example.com",
-  },
-};
-
-const currentEnv = envConfig[ENV] || envConfig.dev;
+const bddTestDir = defineBddConfig({
+  features: "tests/features/**/*.feature",
+  steps: "tests/steps/**/*.steps.ts",
+});
 
 export default defineConfig({
   testDir: "./tests",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: [
     ["list"],
     [
@@ -35,13 +30,14 @@ export default defineConfig({
     ],
   ],
   use: {
-    baseURL: currentEnv.baseURL,
+    baseURL: BUGGY_SITE_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   projects: [
     {
-      name: "chromium",
+      name: "bdd",
+      testDir: bddTestDir,
       use: { ...devices["Desktop Chrome"] },
     },
   ],

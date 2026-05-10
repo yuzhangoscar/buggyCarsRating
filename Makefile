@@ -1,4 +1,4 @@
-.PHONY: install test test-headed test-debug lint lint-fix report report-open clean help \
+.PHONY: install bddgen test test-headed test-debug lint lint-fix report report-open clean help \
         docker-build docker-test docker-lint docker-report
 
 # Default environment
@@ -10,21 +10,25 @@ install:
 	npm ci
 	npx playwright install --with-deps chromium
 
-## Run all tests (headless)
-test:
-	TEST_ENV=$(TEST_ENV) npx playwright test
+## Generate BDD test files from .feature files
+bddgen:
+	npx bddgen
 
-## Run tests with browser visible
-test-headed:
-	TEST_ENV=$(TEST_ENV) npx playwright test --headed
+## Run all BDD tests (headless)
+test: bddgen
+	TEST_ENV=$(TEST_ENV) npx playwright test --project=bdd
 
-## Run tests in debug mode
-test-debug:
-	TEST_ENV=$(TEST_ENV) npx playwright test --debug
+## Run BDD tests with browser visible
+test-headed: bddgen
+	TEST_ENV=$(TEST_ENV) npx playwright test --project=bdd --headed
 
-## Run tests for a specific file (usage: make test-file FILE=tests/example.spec.ts)
-test-file:
-	TEST_ENV=$(TEST_ENV) npx playwright test $(FILE)
+## Run BDD tests in debug mode
+test-debug: bddgen
+	TEST_ENV=$(TEST_ENV) npx playwright test --project=bdd --debug
+
+## Run a specific feature file (usage: make test-file FILE=tests/features/home.feature)
+test-file: bddgen
+	TEST_ENV=$(TEST_ENV) npx playwright test --project=bdd $(FILE)
 
 ## Run lint
 lint:
@@ -44,19 +48,21 @@ report-open: report
 
 ## Clean test artifacts
 clean:
-	rm -rf allure-results allure-report test-results playwright-report
+	rm -rf allure-results allure-report test-results playwright-report .features-gen
 
 ## Build Docker image
 docker-build:
 	docker build -t $(DOCKER_IMAGE) .
 
-## Run tests in Docker
+## Run BDD tests in Docker
 docker-test: docker-build
 	docker run --rm \
 		-e TEST_ENV=$(TEST_ENV) \
+		-e BUGGY_CARS_LOGIN_PASSWORD=$(BUGGY_CARS_LOGIN_PASSWORD) \
+		-e BUGGY_CARS_TEST_LOGIN=$(BUGGY_CARS_TEST_LOGIN) \
 		-v $(PWD)/allure-results:/app/allure-results \
 		-v $(PWD)/test-results:/app/test-results \
-		$(DOCKER_IMAGE)
+		$(DOCKER_IMAGE) sh -c "npx bddgen && npx playwright test --project=bdd"
 
 ## Run lint in Docker
 docker-lint: docker-build
@@ -73,10 +79,11 @@ docker-report: docker-build
 help:
 	@echo "Available targets:"
 	@echo "  make install       - Install dependencies and browsers"
-	@echo "  make test          - Run all tests (headless)"
-	@echo "  make test-headed   - Run tests with browser visible"
-	@echo "  make test-debug    - Run tests in debug mode"
-	@echo "  make test-file FILE=<path>  - Run a specific test file"
+	@echo "  make bddgen        - Generate BDD tests from .feature files"
+	@echo "  make test          - Run all BDD tests (headless)"
+	@echo "  make test-headed   - Run BDD tests with browser visible"
+	@echo "  make test-debug    - Run BDD tests in debug mode"
+	@echo "  make test-file FILE=<path>  - Run a specific feature file"
 	@echo "  make lint          - Run ESLint"
 	@echo "  make lint-fix      - Run ESLint with auto-fix"
 	@echo "  make report        - Generate Allure report"
@@ -85,7 +92,7 @@ help:
 	@echo ""
 	@echo "Docker targets:"
 	@echo "  make docker-build  - Build Docker image"
-	@echo "  make docker-test   - Run tests in Docker"
+	@echo "  make docker-test   - Run BDD tests in Docker"
 	@echo "  make docker-lint   - Run lint in Docker"
 	@echo "  make docker-report - Generate Allure report in Docker"
 	@echo ""
