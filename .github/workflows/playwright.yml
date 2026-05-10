@@ -41,8 +41,15 @@ jobs:
       - name: Run lint in Docker
         run: make docker-lint
 
+      - name: Create output directories
+        run: mkdir -p allure-results test-results
+
       - name: Run Playwright tests in Docker
         run: make docker-test TEST_ENV=${{ github.event.inputs.environment || 'dev' }}
+
+      - name: Fix output directory permissions
+        if: always()
+        run: sudo chown -R $(id -u):$(id -g) allure-results test-results 2>/dev/null || true
 
       - name: Upload test results (screenshots)
         if: always()
@@ -65,10 +72,12 @@ jobs:
         run: |
           git fetch origin gh-pages --depth=1 || true
           if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
-            git checkout origin/gh-pages -- history || true
-            mkdir -p allure-results/history
-            cp -r history/* allure-results/history/ 2>/dev/null || true
-            rm -rf history
+            git checkout origin/gh-pages -- history 2>/dev/null || true
+            if [ -d history ]; then
+              mkdir -p allure-results/history
+              cp -r history/* allure-results/history/
+              rm -rf history
+            fi
           fi
 
       - name: Generate Allure report with history
