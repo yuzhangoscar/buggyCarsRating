@@ -58,8 +58,8 @@ docker-build:
 docker-test: docker-build
 	docker run --rm \
 		-e TEST_ENV=$(TEST_ENV) \
-		-e BUGGY_CARS_LOGIN_PASSWORD=$(BUGGY_CARS_LOGIN_PASSWORD) \
-		-e BUGGY_CARS_TEST_LOGIN=$(BUGGY_CARS_TEST_LOGIN) \
+		-e BUGGY_CARS_LOGIN_PASSWORD \
+		-e BUGGY_CARS_TEST_LOGIN \
 		-v $(PWD)/allure-results:/app/allure-results \
 		-v $(PWD)/test-results:/app/test-results \
 		$(DOCKER_IMAGE) sh -c "./node_modules/.bin/bddgen && npx playwright test --project=bdd"
