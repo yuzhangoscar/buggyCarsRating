@@ -287,19 +287,6 @@ export async function expectModelCommentsTableHeaders(page: Page): Promise<void>
   await expect(thead.getByRole("columnheader", { name: "Comment", exact: true })).toBeVisible();
 }
 
-/** Runs the standard model-detail checks; returns `{ votes }` for downstream steps. */
-export async function verifyModelDetailPageElements(page: Page): Promise<{ votes: number }> {
-  await expect(page).toHaveURL(buggyModelPageUrlRegex());
-
-  await expectModelDetailMakeLogoVisible(page);
-  await expectModelSpecificationHeading(page);
-
-  const votes = await readModelVotesCount(page);
-
-  await expectModelCommentsTableHeaders(page);
-
-  return { votes };
-}
 
 // =============================================================================
 // Overall Rating — pager (`«` / `»`, “page N of {total}”)
