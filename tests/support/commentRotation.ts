@@ -71,12 +71,21 @@ function writeState(state: State): void {
 }
 
 /**
- * Next (user, car-slot) for this machine; advances `.playwright/comment-allocation-state.json`.
+ * Peeks at the next (user, car-slot) without advancing the state file.
+ * Call `commitSlotAdvance()` after a successful vote to move to the next slot.
+ * If the vote fails, the next run retries the same slot.
  */
 export function allocateNextCommentSlot(): AllocatedCommentSlot {
   const state = readState();
-  const linearIndex = state.nextLinearIndex;
-  state.nextLinearIndex = linearIndex + 1;
+  return pairingFromLinearIndex(state.nextLinearIndex);
+}
+
+/**
+ * Advances the state file to the next slot. Call this only after
+ * a vote has been successfully verified.
+ */
+export function commitSlotAdvance(): void {
+  const state = readState();
+  state.nextLinearIndex = state.nextLinearIndex + 1;
   writeState(state);
-  return pairingFromLinearIndex(linearIndex);
 }

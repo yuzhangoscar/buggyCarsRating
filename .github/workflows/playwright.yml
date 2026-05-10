@@ -50,15 +50,22 @@ jobs:
       - name: Run lint in Docker
         run: make docker-lint
 
+      - name: Restore rotation state
+        uses: actions/cache/restore@v4
+        with:
+          path: .playwright/comment-allocation-state.json
+          key: comment-rotation-state-${{ github.run_id }}
+          restore-keys: comment-rotation-state-
+
       - name: Create output directories
-        run: mkdir -p allure-results test-results
+        run: mkdir -p allure-results test-results .playwright
 
       - name: Run Playwright tests in Docker
         run: make docker-test TEST_ENV=${{ github.event.inputs.environment || 'dev' }}
 
       - name: Fix output directory permissions
         if: always()
-        run: sudo chown -R $(id -u):$(id -g) allure-results test-results 2>/dev/null || true
+        run: sudo chown -R $(id -u):$(id -g) allure-results test-results .playwright 2>/dev/null || true
 
       - name: Upload test results (screenshots)
         if: always()
@@ -103,6 +110,13 @@ jobs:
           path: allure-report/
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Save rotation state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .playwright/comment-allocation-state.json
+          key: comment-rotation-state-${{ github.run_id }}
 
       - name: Deploy Allure report to GitHub Pages
         if: always()

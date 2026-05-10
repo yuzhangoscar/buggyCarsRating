@@ -14,7 +14,7 @@ import {
   openOverallRatingFromHome,
 } from "../support/buggyCarsApp";
 import type { AllocatedCommentSlot } from "../support/commentRotation";
-import { allocateNextCommentSlot } from "../support/commentRotation";
+import { allocateNextCommentSlot, commitSlotAdvance } from "../support/commentRotation";
 import { resolveBuggyCarsTrialUsername } from "../support/buggyCarsCredentials";
 
 const { Given, When, Then } = createBdd();
@@ -67,6 +67,7 @@ When("the user navigates to page 2 on Overall Rating", async ({ page }) => {
 When("the user logs in using the allocated comment rotation account", async ({ page }) => {
   voteScenarioSlot = allocateNextCommentSlot();
   voteScenarioVotesBefore = undefined;
+  console.log(`[vote-scenario] linearIndex=${voteScenarioSlot.linearIndex}, username=${voteScenarioSlot.username}, userIndex=${voteScenarioSlot.userIndex}, carSlotIndex=${voteScenarioSlot.carSlotIndex}, cycleIndex=${voteScenarioSlot.cycleIndex}`);
   await loginAsBuggyCarsUser(page, voteScenarioSlot.username);
 });
 
@@ -102,6 +103,9 @@ Then("the model vote count should increase by one", async ({ page }) => {
     throw new Error("Missing recorded vote count.");
   }
   await expectModelVotesCountEventually(page, voteScenarioVotesBefore + 1);
+  // Vote verified — advance to the next slot so the next run uses a new pair
+  commitSlotAdvance();
+  console.log(`[vote-scenario] vote confirmed, advanced rotation past linearIndex=${voteScenarioSlot?.linearIndex}`);
 });
 
 When("the user logs out from the navbar", async ({ page }) => {

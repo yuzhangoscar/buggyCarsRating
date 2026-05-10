@@ -27,6 +27,12 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/steps/**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     ignores: [
       "node_modules/",
       "dist/",
