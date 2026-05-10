@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { requireBuggyCarsPassword } from "./buggyCarsCredentials";
 
 // =============================================================================
-// Site URLs & waits (single place to tweak timing / host)
+// Site URLs & waits
 // =============================================================================
 
 const BUGGY_HOST = "buggy.justtestit.org";
@@ -22,7 +22,7 @@ const timeoutMs = {
 } as const;
 
 // =============================================================================
-// Landing
+// Landing page
 // =============================================================================
 
 export async function assertBuggyLandingLoaded(page: Page): Promise<void> {
@@ -32,9 +32,7 @@ export async function assertBuggyLandingLoaded(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// Auth — navbar login ([Buggy Cars Rating](https://buggy.justtestit.org/), logged-out shell)
-// Matches: input[name=login][placeholder=Login], input[name=password], submit Login.
-// Do not assert Angular control classes (ng-pristine, etc.) — they change after interaction.
+// Auth — navbar login
 // =============================================================================
 
 function navbarAuthRegion(page: Page): Locator {
@@ -126,13 +124,8 @@ export async function openOverallRatingFromHome(page: Page): Promise<void> {
 }
 
 // =============================================================================
-// Model list — "View more" (`href="/model/..."` is unstable; match label only)
+// Model list — "View more"
 // =============================================================================
-
-/**
- * Links like `<a href="/model/...">View more</a>` — **do not** key off `href`.
- * Narrow `scope` (e.g. `overallCarsTable(page)` or a specific `tr`) when several rows qualify.
- */
 export function viewMoreLink(scope: Page | Locator): Locator {
   return scope.getByRole("link", { name: "View more", exact: true });
 }
@@ -149,18 +142,13 @@ export async function expectViewMoreLinkPresent(
 }
 
 // =============================================================================
-// Model detail `/model/{id}` (e.g. [model page](https://buggy.justtestit.org/model/ckl2phsabijs71623vk0%7Cckl2phsabijs71623vqg))
+// Model detail
 // =============================================================================
 
-/** Current page is a model route (`/model/...`). */
 export function buggyModelPageUrlRegex(): RegExp {
   return new RegExp(`^https://${BUGGY_HOST}/model/[^/?#]+$`);
 }
 
-/**
- * Make logo in the first column — same shape as `img.img-fluid.center-block` with dynamic `src` / `title`.
- * Located via structure: left column → link to `/make/...` → image (never key off `src` / `title`).
- */
 export function modelDetailMakeLogoImage(page: Page): Locator {
   return page.locator("main").locator('div.col-lg-2 a[href^="/make/"]').locator("img.img-fluid.center-block");
 }
@@ -181,7 +169,6 @@ function modelDetailVotesHeading(page: Page): Locator {
 
 /**
  * Reads the numeric votes value from `<h4>Votes: <strong>N</strong></h4>`.
- * Throws if `N` is missing or not a non‑negative integer string.
  */
 export async function readModelVotesCount(page: Page): Promise<number> {
   const heading = modelDetailVotesHeading(page);
@@ -205,8 +192,6 @@ export async function readModelVotesCount(page: Page): Promise<number> {
 
 /**
  * Optional comment field on the model card (`id="comment"`, `rows="2"`).
- * Shown only when logged in and `model.canVote` ([Buggy Cars Rating](https://buggy.justtestit.org/) template).
- * Do not match Angular state classes (`ng-pristine`, etc.).
  */
 export function modelDetailCommentTextarea(page: Page): Locator {
   return page.locator("main textarea#comment.form-control");
@@ -276,7 +261,6 @@ export async function expectModelVotesCountEventually(page: Page, expected: numb
 
 /**
  * Comment history table headers (`<th>Date</th>` …).  
- * **Note:** This block exists only when the model has at least one comment (`*ngIf="model.comments.length > 0"`).
  */
 export async function expectModelCommentsTableHeaders(page: Page): Promise<void> {
   const thead = page.locator("main table.table thead.thead-inverse");
@@ -387,9 +371,6 @@ export async function assertOverallPaginationVisible(
 /**
  * After `«` / `»`, the pager label can update before rows finish loading (~3–5s).  
  * Wait on the **first row Rank** text instead: it tracks real data for the target page.
- *
- * **Caveat:** Assumes default sort and {@link OVERALL_MODELS_PER_PAGE}; after sorting by another column,
- * rank column position/text may no longer match this expectation.
  */
 export async function waitForOverallPaginationSettled(
   page: Page,
@@ -414,8 +395,7 @@ export async function clickOverallPaginationLink(
 }
 
 /**
- * Opens `/model/...` for the **carSlotIndex** row in Overall listing order (0 = first row page 1).
- * **View more** exists only when the listing shows “View more” (many comments); otherwise uses the row’s `/model/` link.
+ * Opens the **carSlotIndex** row in Overall listing order (0 = first row page 1).
  */
 export async function openAllocatedCarFromOverallListing(page: Page, carSlotIndex: number): Promise<void> {
   if (!Number.isInteger(carSlotIndex) || carSlotIndex < 0) {
