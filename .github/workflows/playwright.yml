@@ -100,7 +100,7 @@ jobs:
 
       - name: Generate Allure report with history
         if: always()
-        run: npx allure generate allure-results --clean -o allure-report
+        run: rm -rf allure-report && npx allure generate -o allure-report
 
       - name: Upload Allure report
         if: always()

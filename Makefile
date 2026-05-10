@@ -40,7 +40,7 @@ lint-fix:
 
 ## Generate Allure report
 report:
-	npx allure generate allure-results --clean -o allure-report
+	rm -rf allure-report && npx allure generate -o allure-report
 
 ## Open Allure report in browser
 report-open: report
@@ -74,7 +74,7 @@ docker-report: docker-build
 	docker run --rm \
 		-v $(PWD)/allure-results:/app/allure-results \
 		-v $(PWD)/allure-report:/app/allure-report \
-		$(DOCKER_IMAGE) npx allure generate allure-results --clean -o allure-report
+		$(DOCKER_IMAGE) sh -c "rm -rf allure-report && npx allure generate -o allure-report"
 
 ## Show help
 help:
