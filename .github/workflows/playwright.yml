@@ -1,0 +1,92 @@
+name: Playwright Tests
+
+on:
+  # Nightly run at midnight UTC
+  schedule:
+    - cron: "0 0 * * *"
+
+  # Manual trigger with environment selection
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Test environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - qa
+
+env:
+  API_BASE_URL: "https://placeholder.example.com/api"
+  APP_USERNAME: "placeholder_user"
+  APP_PASSWORD: "placeholder_password"
+  # GitHub Actions → Settings → Secrets: add BUGGY_CARS_LOGIN_PASSWORD (not committed).
+  BUGGY_CARS_LOGIN_PASSWORD: ${{ secrets.BUGGY_CARS_LOGIN_PASSWORD }}
+
+jobs:
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: make docker-build
+
+      - name: Run lint in Docker
+        run: make docker-lint
+
+      - name: Run Playwright tests in Docker
+        run: make docker-test TEST_ENV=${{ github.event.inputs.environment || 'dev' }}
+
+      - name: Upload test results (screenshots)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 30
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results/
+          retention-days: 30
+
+      - name: Fetch Allure history from gh-pages
+        if: always()
+        run: |
+          git fetch origin gh-pages --depth=1 || true
+          if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            git checkout origin/gh-pages -- history || true
+            mkdir -p allure-results/history
+            cp -r history/* allure-results/history/ 2>/dev/null || true
+            rm -rf history
+          fi
+
+      - name: Generate Allure report with history
+        if: always()
+        run: npx allure generate allure-results --clean -o allure-report
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
+
+      - name: Deploy Allure report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-report
+          keep_files: false

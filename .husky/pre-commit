@@ -1,0 +1,13 @@
+# Validate branch name
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+valid_pattern="^(main|master|develop|gh-pages|release\/.*|hotfix\/.*|feature\/.*|bugfix\/.*|test\/.*|chore\/.*)$"
+
+if [ -n "$branch" ] && ! echo "$branch" | grep -qE "$valid_pattern"; then
+  echo "❌ Invalid branch name: '$branch'"
+  echo "Branch names must match: $valid_pattern"
+  echo "Examples: feature/add-login, bugfix/fix-header, chore/update-deps"
+  exit 1
+fi
+
+# Run lint
+npx eslint .

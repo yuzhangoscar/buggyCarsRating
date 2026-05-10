@@ -1,0 +1,10 @@
+node_modules/
+dist/
+allure-results/
+allure-report/
+test-results/
+playwright-report/
+.git/
+.github/
+.husky/
+.DS_Store

@@ -21,12 +21,19 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/fixtures/**/*.ts"],
+    rules: {
+      "no-empty-pattern": "off",
+    },
+  },
+  {
     ignores: [
       "node_modules/",
       "dist/",
       "allure-results/",
       "allure-report/",
       "test-results/",
+      ".features-gen/",
       "commitlint.config.ts",
     ],
   }
