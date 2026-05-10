@@ -1,0 +1,2 @@
+[vote-scenario] linearIndex=10, username=001Tester, userIndex=0, carSlotIndex=10, cycleIndex=0
+[vote-scenario] vote confirmed, advanced rotation past linearIndex=10
